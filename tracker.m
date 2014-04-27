@@ -1,3 +1,8 @@
+%%% tracker
+%%% version 1.0
+%%% 2014-04-27
+
+
 function varargout = tracker(varargin)
 % TRACKER MATLAB code for tracker.fig
 %      TRACKER, by itself, creates a new TRACKER or raises the existing
@@ -52,6 +57,19 @@ function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to tracker (see VARARGIN)
 
+handles.faceDetector     = vision.CascadeObjectDetector();
+handles.cam = videoinput('macvideo');
+set(handles.cam, 'ReturnedColorSpace', 'RGB');
+
+% Create an image object for previewing.
+vidRes = get(handles.cam, 'VideoResolution');
+nBands = get(handles.cam, 'NumberOfBands');
+hImage = image( zeros(vidRes(2), vidRes(1), nBands) );
+
+uicontrol('String', 'Close', 'Callback', 'close(gcf)');
+
+preview(handles.cam, hImage);
+
 % Choose default command line output for tracker
 handles.output = hObject;
 
@@ -73,18 +91,21 @@ function varargout = tracker_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in detectButton.
+%%% detectButton.
 function detectButton_Callback(hObject, eventdata, handles)
-% hObject    handle to detectButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
+frame = getsnapshot(handles.cam);
+bbox = step(handles.faceDetector, frame);
+markedFrame = insertShape(frame, 'Rectangle', bbox);
+closepreview;
+imshow(markedFrame);
+% Update handles structure
+guidata(hObject, handles);
 
 
 % --- Executes on button press in trackButton.
 function trackButton_Callback(hObject, eventdata, handles)
-% hObject    handle to trackButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 
 
 % --- Executes on button press in stopButton.
