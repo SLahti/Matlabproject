@@ -93,12 +93,17 @@ varargout{1} = handles.output;
 
 %%% detectButton.
 function detectButton_Callback(hObject, eventdata, handles)
-
+disp('detectButton');
 frame = getsnapshot(handles.cam);
+disp('Detecting face...');
 bbox = step(handles.faceDetector, frame);
+disp('Insert shape...');
 markedFrame = insertShape(frame, 'Rectangle', bbox);
+disp('Close preview...');
 closepreview;
+disp('Show frame...');
 imshow(markedFrame);
+
 % Update handles structure
 guidata(hObject, handles);
 
