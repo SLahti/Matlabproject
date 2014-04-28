@@ -71,10 +71,6 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 % --- Outputs from this function are returned to the command line.
 function varargout = tracker_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -88,11 +84,11 @@ varargout{1} = handles.output;
 
 %%% detectButton.
 function detectButton_Callback(hObject, eventdata, handles)
-<<<<<<< HEAD
+
 frame = getsnapshot(handles.cam);
 bbox = step(handles.faceDetector, frame);
 markedFrame = insertShape(frame, 'Rectangle', bbox);
-=======
+
 disp('detectButton');
 handles.frame = getsnapshot(handles.cam);
 disp('Detecting face...');
@@ -104,7 +100,7 @@ markedFrame = insertShape(handles.frame, 'FilledRectangle', ...
                           'Opacity', 0.2);
 disp('Close preview...');
 tic;    
->>>>>>> master
+
 closepreview;
 imshow(markedFrame);
 
@@ -120,17 +116,17 @@ guidata(hObject, handles);
 function trackButton_Callback(hObject, eventdata, handles)
 
 handles.runFlag = true;
-<<<<<<< HEAD
+
 
 startTracking(handles.runFlag, handles.frame, handles.bbox, ...
               handles.cam, handles.faceDetector);
-=======
+
 startTracking(handles.runFlag, handles.frame, handles.bbox, ...
               handles.cam, handles.faceDetector)
 
 % Update handles structure
 guidata(hObject, handles);
->>>>>>> master
+
 
 % --- Executes on button press in stopButton.
 function stopButton_Callback(hObject, eventdata, handles)
