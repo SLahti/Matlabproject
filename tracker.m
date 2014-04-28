@@ -49,13 +49,8 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before tracker is made visible.
+%%% Executes just before tracker is made visible.
 function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to tracker (see VARARGIN)
 
 handles.faceDetector     = vision.CascadeObjectDetector();
 handles.cam = videoinput('macvideo');
@@ -70,14 +65,13 @@ uicontrol('String', 'Close', 'Callback', 'close(gcf)');
 
 preview(handles.cam, hImage);
 
+handles.runFlag = false;
+
 % Choose default command line output for tracker
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
-
-% UIWAIT makes tracker wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -94,15 +88,23 @@ varargout{1} = handles.output;
 %%% detectButton.
 function detectButton_Callback(hObject, eventdata, handles)
 disp('detectButton');
-frame = getsnapshot(handles.cam);
+handles.frame = getsnapshot(handles.cam);
 disp('Detecting face...');
-bbox = step(handles.faceDetector, frame);
+handles.bbox = step(handles.faceDetector, handles.frame);
+disp(handles.bbox);
 disp('Insert shape...');
-markedFrame = insertShape(frame, 'Rectangle', bbox);
+markedFrame = insertShape(handles.frame, 'FilledRectangle', ...
+                          handles.bbox, 'Color', 'green', ...
+                          'Opacity', 0.2);
 disp('Close preview...');
+tic;    
 closepreview;
 disp('Show frame...');
 imshow(markedFrame);
+
+if toc > 3
+    preview(handles.cam);
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -111,10 +113,18 @@ guidata(hObject, handles);
 % --- Executes on button press in trackButton.
 function trackButton_Callback(hObject, eventdata, handles)
 
+handles.runFlag = true;
+startTracking(handles.runFlag, handles.frame, handles.bbox, ...
+              handles.cam, handles.faceDetector)
 
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in stopButton.
 function stopButton_Callback(hObject, eventdata, handles)
-% hObject    handle to stopButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
+handles.runFlag = false;
+startTracking(handles.runFlag);
+
+% Update handles structure
+guidata(hObject, handles);
