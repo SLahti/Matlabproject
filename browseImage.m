@@ -8,4 +8,4 @@ function [image] = browseImage()
 
 filePath = [path file];
 
-image = imread(filePath);
+image = rgb2gray(imread(filePath));

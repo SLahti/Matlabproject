@@ -10,3 +10,5 @@ function [object] = browseObject()
 filePath = fullfile(path, file);
 
 object = open(filePath);
+figure(1);
+imshow(object);

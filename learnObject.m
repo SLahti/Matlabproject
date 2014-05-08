@@ -11,7 +11,7 @@ objPts = detectMinEigenFeatures(objImg);
 objPts = objPts.selectStrongest(200);
 ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
 
-figure(1);
+%figure(1);
 imshow(ptsImg);
 
 objFeat = extractFeatures(image, objPts);

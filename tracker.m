@@ -22,7 +22,7 @@ function varargout = tracker(varargin)
 
 % Edit the above text to modify the response to help tracker
 
-% Last Modified by GUIDE v2.5 05-May-2014 15:20:57
+% Last Modified by GUIDE v2.5 08-May-2014 15:42:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,7 +79,10 @@ function existingObject_Callback(hObject, eventdata, handles)
 % hObject    handle to existingObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-browsePath = browseObject();
+axes(handles.axes1);
+browseObject();
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in browseImage.
 function browseImage_Callback(hObject, eventdata, handles)
@@ -105,7 +108,7 @@ function markObject_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 axes(handles.axes1);
-highlightObject(handles.image);
+handles.objectRegion = highlightObject(handles.image);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -115,7 +118,16 @@ function learnObject_Callback(hObject, eventdata, handles)
 % hObject    handle to learnObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-learnObject();
+[handles.objImg, handles.objPts, handles.objFeat] = learnObject(handles.image, handles.objectRegion);
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in saveObject.
+function saveObject_Callback(hObject, eventdata, handles)
+% hObject    handle to saveObject (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+saveObject(handles.objImg, handles.objPts, handles.objFeat);
 
 % --- Executes on button press in targetImage.
 function targetImage_Callback(hObject, eventdata, handles)
@@ -136,3 +148,5 @@ function trackTarget_Callback(hObject, eventdata, handles)
 % hObject    handle to trackTarget (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
