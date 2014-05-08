@@ -1,9 +1,11 @@
 %%% Function: browseImage
 %%% Input: None
-%%% Output: whole file path
+%%% Output: image
 
-function [filePath] = browseImage()
+function [image] = browseImage()
 
 [file path] = uigetfile({'*.jpg';'*.png'}, 'Pick a file');
 
 filePath = [path file];
+
+image = imread(filePath);
