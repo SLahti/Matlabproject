@@ -86,11 +86,9 @@ function browseImage_Callback(hObject, eventdata, handles)
 % hObject    handle to browseImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.image = browseImage();
-axes(handles.axes1);
-imshow(handles.image);
-% Update handles structure
-guidata(hObject, handles);
+filePath = browseImage();
+axes(handles.axesImage);
+imshow(yourImage);
 
 % --- Executes on button press in getSnapshot.
 function getSnapshot_Callback(hObject, eventdata, handles)
@@ -104,11 +102,7 @@ function markObject_Callback(hObject, eventdata, handles)
 % hObject    handle to markObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-axes(handles.axes1);
-highlightObject(handles.image);
-% Update handles structure
-guidata(hObject, handles);
-
+highlightObject();
 
 % --- Executes on button press in learnObject.
 function learnObject_Callback(hObject, eventdata, handles)
