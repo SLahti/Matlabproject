@@ -86,7 +86,7 @@ function browseImage_Callback(hObject, eventdata, handles)
 % hObject    handle to browseImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-filePath = browseImage();
+filePath = browseImage;
 
 % --- Executes on button press in getSnapshot.
 function getSnapshot_Callback(hObject, eventdata, handles)
