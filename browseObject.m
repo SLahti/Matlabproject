@@ -1,6 +1,6 @@
 %%% browseObject
 %%% Input: None
-%%% Output: An mat-file with image, points and and features
+%%% Output: A .mat-file with image, points and features
 %%% 
 
 function [object] = browseObject()
@@ -10,5 +10,8 @@ function [object] = browseObject()
 filePath = fullfile(path, file);
 
 object = open(filePath);
-figure(1);
-imshow(object);
+
+imshow(object.img);
+hold on;
+pts = object.pts;
+plot(pts.Location(:,1),pts.Location(:,2), 'X');
