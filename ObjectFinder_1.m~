@@ -5,7 +5,7 @@
 
 clear all
 
-cam = videoinput('macvideo', 1);
+cam = videoinput('macvideo', 2);
 set(cam, 'ReturnedColorSpace', 'RGB');
 
 %%%%% GET REFERENCE IMAGE 
@@ -83,4 +83,3 @@ allPts = [matchedCamPts.Location ; refPtsMv];
 figure(4)
 matchedPtsImg = insertMarker(camImg, allPts, 'X', 'Color', 'red'); hold on;
 imshow(matchedPtsImg);
-
