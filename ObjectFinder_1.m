@@ -9,7 +9,7 @@ cam = videoinput('macvideo', 1);
 set(cam, 'ReturnedColorSpace', 'RGB');
 
 %%%%% GET REFERENCE IMAGE 
-refImg = getsnapshot(cam);%imread('refPic.jpg');
+refImg = getsnapshot(cam); %imread('refPic.jpg');
 refImg = rgb2gray(refImg);
 %refImg = im2bw(refImg);
 %refImg = histeq(refImg);
@@ -36,7 +36,7 @@ figure(1);
 imshow(ptsImg);
 title('Detected Interest Points: Reference Image');
 
-refFeat = extractFeatures(objImg, refPts);
+refFeat = extractFeatures(objImg, refPts, 'Method', 'SURF');
 
 %%%%% GET CAM IMAGE
 camImg = getsnapshot(cam);
