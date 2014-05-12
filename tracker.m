@@ -22,7 +22,7 @@ function varargout = tracker(varargin)
 
 % Edit the above text to modify the response to help tracker
 
-% Last Modified by GUIDE v2.5 12-May-2014 10:05:40
+% Last Modified by GUIDE v2.5 12-May-2014 11:01:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -163,12 +163,16 @@ function saveObject_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 saveObject(handles.objImg, handles.objPts, handles.objFeat);
 
-% --- Executes on button press in targetImage.
-function targetImage_Callback(hObject, eventdata, handles)
-% hObject    handle to targetImage (see GCBO)
+% --- Executes on button press in browseTargetImage.
+function browseTargetImage_Callback(hObject, eventdata, handles)
+% hObject    handle to browseTargetImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.image = browseImage();
+axes(handles.axes2);
+imshow(handles.image);
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in targetSnapshot.
 function targetSnapshot_Callback(hObject, eventdata, handles)
