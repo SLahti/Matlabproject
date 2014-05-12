@@ -13,6 +13,15 @@ end
 imshow(image);
 
 objReg = round(getPosition(imrect));
+
+%{
+x = objReg(1, 1);
+y = objReg(1, 2);
+w = objReg(1, 3);
+h = objReg(1, 4);
+objRegPoly = [x, y, x+w, y, x+w, y+h, x, y+h];
+%}
+
 higImg = insertShape(image, 'Rectangle', objReg, 'Color', 'red');
 
 %figure(1);

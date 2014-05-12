@@ -5,29 +5,30 @@
 
 function [matchedImgPts] = findObject(image, objFeat)
 
-figure(1);
-imshow(image); %Show in right axes
+%figure(2);
+%imshow(image); hold on;%Show in right axes
 
-imgPts = detectMinEigenFeatures(image);
-imgPts = imgPts.selectStrongest(500);
+imgPts = detectSURFFeatures(image);
+%imgPts = imgPts.selectStrongest(500);
 
-ptsImg = insertMarker(image, imgPts.Location, 'X', 'Color', 'yellow');
-figure(1);
-imshow(ptsImg); %Show in right axes
-hold on;
+%ptsImg = insertMarker(image, imgPts.Location, 'X', 'Color', 'yellow');
+%figure(2);
+%plot(imgPts);
 
 imgFeat = extractFeatures(image, imgPts);
 
-idxPairs = matchFeatures(imgFeat, objFeat);
+idxPairs = matchFeatures(imgFeat, objFeat, 'MatchThreshold', 5);
 
 matchedImgPts = imgPts(idxPairs(:, 1));
 %matchedRefPts = refPts(idxPairs(:, 2));
+
+
 
 %In left axes
 %hold on; 
 %plot(camPts.Location(:, 1), objPts.Location(:, 2), 'O', 'Color', 'green');
 
 %In right axes
-figure(1);
-plot(matchedImgPts.Location(:, 1), matchedImgPts.Location(:, 2), ...
-     'O', 'Color', 'green');
+%figure(3);
+%plot(matchedImgPts.Location(:, 1), matchedImgPts.Location(:, 2), ...
+ %    'O', 'Color', 'green');
