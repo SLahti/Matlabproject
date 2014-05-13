@@ -1,27 +1,46 @@
-%%%
+%%% trackObject
 %%%
 %%%
 %%%
 
-function trackObject(cam, points, tarImg)
+function trackObject(cam, refFeat, handles)%, tarImg)
 
-% Create a point tracker and enable the bidirectional error constraint to
-% make it more robust in the presence of noise and clutter.
+start(cam);
+
+%%% FROM ObjectFInder_1
+% Get camImg
+camImg = getsnapshot(cam);
+camImg = rgb2gray(camImg);
+%camImg = im2bw(camImg);
+%camImg = histeq(camImg);
+
+camPts  = detectSURFFeatures(camImg);
+%camPts = camPts.selectStrongest(200);
+
+camFeat = extractFeatures(camImg, camPts);
+
+idxPairs = matchFeatures(camFeat, refFeat);
+
+matchedCamPts = camPts(idxPairs(:, 1));
+%matchedRefPts = refPts(idxPairs(:, 2));
+
+%%% FROM ex.m (taken example of pointTracker in VideoPlayer)
+% Create a point tracker 
 pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
 
-% Initialize the tracker with the initial point locations and the initial
-% video frame.
-points = points.Location;
-initialize(pointTracker, points, tarImg);
+% Initialize the tracker with the initial point locations and video frame.
+points = matchedCamPts.Location;
+initialize(pointTracker, points, camImg);
 
 % Make a copy of the points to be used for computing the geometric
 % transformation between the points in the previous and the current frames
 oldPts = points;
 
-index = 0;
-while index <= 300
+%index = 0;
+while get(hObject,'Value')
     
     frame = getsnapshot(cam);
+    frame = rgb2gray(frame);
     
     % Track the points. Note that some points may be lost.
     [points, isFound] = step(pointTracker, frame);
@@ -34,17 +53,19 @@ while index <= 300
         % and the new points and eliminate outliers
         [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
             oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
-
+        
+        %{
         % Apply the transformation to the bounding box
         [bboxPolygon(1:2:end), bboxPolygon(2:2:end)] = ...
             transformPointsForward(xform, bboxPolygon(1:2:end), ...
                                           bboxPolygon(2:2:end));
-
+            
         % Insert a bounding box around the object being tracked
         videoFrame = insertShape(videoFrame, 'Polygon', bboxPolygon);
-
+         %}
+            
         % Display tracked points
-        videoFrame = insertMarker(videoFrame, visiblePts, '+', ...
+        frame = insertMarker(frame, visiblePts, '+', ...
             'Color', 'white');
 
         % Reset the points
@@ -53,6 +74,8 @@ while index <= 300
     end
 
     % Display the annotated video frame using the video player object
-    step(videoPlayer, videoFrame);
-    index = index + 1;
+    figure(1);
+    imshow(frame);
+    %index = index + 1;
 end
+stop(cam);

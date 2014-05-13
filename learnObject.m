@@ -6,13 +6,16 @@
 function [objImg, objPts, objFeat] = learnObject(image, objReg)
 
 if (size(image, 3) ~= 1)
-    image = rgb2gray(image); % Fulhaxx; vad om varken rgb eller gray?
+    %disp('Convert to gray!');
+    imBW = rgb2gray(image); % Fulhaxx; vad om varken rgb eller gray?
+    %image = histeq(image);
 end
 
-objImg = imcrop(image, objReg);
+objImg   = imcrop(image, objReg);
+objImgBW = imcrop(imBW, objReg);
 
-objPts = detectSURFFeatures(objImg);
-objPts = objPts.selectStrongest(200);
+objPts = detectSURFFeatures(objImgBW);
+%objPts = objPts.selectStrongest(200);
 ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
 
 %objPts = detectMinEigenFeatures(objImg);
@@ -22,5 +25,7 @@ ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
 %figure(1);
 imshow(ptsImg);
 
-objFeat = extractFeatures(image, objPts);
+objFeat = extractFeatures(objImgBW, objPts);
+
+size(objFeat);
 
