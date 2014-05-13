@@ -1,3 +1,9 @@
+%%% tracker.m
+%%% 2014-05-13
+%%% GUI that finds or tracks an object in an image or video feed. 
+%%% The object can be browsed from a .mat-file, or saved from an snapshot.
+%%% By: Sebastian Lahti and Martin Härnwall
+
 function varargout = tracker(varargin)
 %TRACKER M-file for tracker.fig
 %      TRACKER, by itself, creates a new TRACKER or raises the existing
@@ -43,7 +49,7 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before tracker is made visible.
+%%% Executes just before tracker is made visible.
 function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
@@ -66,20 +72,21 @@ set(handles.saveObject,'Value',1,'Enable','Off');
 
 handles.video = videoinput('macvideo', 1);
 
-set(handles.video,'TimerPeriod', 0.05, ...
-'TimerFcn',['if(~isempty(gco)),'...
-'handles=guidata(gcf);'... % Update handles
-'image(getsnapshot(handles.video));'... % Get picture using GETSNAPSHOT and put it into axes using IMAGE
-'set(handles.axes2,''ytick'',[],''xtick'',[]),'... % Remove tickmarks and labels that are inserted when using IMAGE
-'else '...
-'delete(imaqfind);'... % Clean up - delete any image acquisition objects
-'end']);
+set(handles.video,'TimerPeriod', 0.05, 'TimerFcn', ...
+   ['if(~isempty(gco)),'...
+        'handles = guidata(gcf);'... % Update handles
+        'image(getsnapshot(handles.video));'... % Get picture using GETSNAPSHOT and put it into axes using IMAGE
+        'set(handles.axes2,''ytick'',[],''xtick'',[]),'... % Remove tickmarks and labels that are inserted when using IMAGE
+    'else '...
+        'delete(imaqfind);'... % Clean up - delete any image acquisition objects
+    'end']);
 
 triggerconfig(handles.video,'manual');
 
 set(handles.video, 'ReturnedColorSpace', 'rgb');
 
 handles.video.FramesPerTrigger = Inf; % Capture frames until we manually stop it
+handles.video.TriggerRepeat = 1;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -87,7 +94,7 @@ guidata(hObject, handles);
 % UIWAIT makes tracker wait for user response (see UIRESUME)
 uiwait(handles.figure1);
 
-% --- Outputs from this function are returned to the command line.
+%%% Outputs from this function are returned to the command line.
 function varargout = tracker_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
@@ -98,11 +105,9 @@ function varargout = tracker_OutputFcn(hObject, eventdata, handles)
 handles.output = hObject;
 varargout{1} = handles.output;
 
-% --- Executes on button press in startStopCamera.
+%%% START/STOP CAMERA BUTTON
 function startStopCamera_Callback(hObject, eventdata, handles)
-% hObject    handle to startStopCamera (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 % Start/Stop Camera
 if strcmp(get(handles.startStopCamera,'String'),'Start Camera')
     % Camera is off. Change button string and start camera.
@@ -114,33 +119,33 @@ else
     stop(handles.video);
 end
 
-% --- Executes on button press in existingObject.
-function existingObject_Callback(hObject, eventdata, handles)
-% hObject    handle to existingObject (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-axes(handles.axes1);
-handles.object = browseObject();
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in browseImage.
+%%% BROWSE EXISTING OBJECT BUTTON
+function existingObject_Callback(hObject, eventdata, handles)
+
+axes(handles.axes1);
+handles.object = browseObject();
+
+% Update handles structure
+guidata(hObject, handles);
+
+%%% BROWSE IMAGE BUTTON
 function browseImage_Callback(hObject, eventdata, handles)
-% hObject    handle to browseImage (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 handles.image = browseImage();
 axes(handles.axes1);
 imshow(handles.image);
+
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in getSnapshot.
+%%% GET SNAPSHOT BUTTON
 function getSnapshot_Callback(hObject, eventdata, handles)
-% hObject    handle to getSnapshot (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 frame = getsnapshot(handles.video);
+%frame = getdata(handles.video, 1, 'uint8');
 handles.image = frame;
 
 stop(handles.video);
@@ -149,13 +154,11 @@ start(handles.video);
 
 set(handles.markObject,'Value',1,'Enable','On');
 
+% Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in markObject.
+%%% MARK OBJECT BUTTON
 function markObject_Callback(hObject, eventdata, handles)
-% hObject    handle to markObject (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 set(handles.startStopCamera,'String','Start Camera');
 stop(handles.video);
@@ -168,124 +171,140 @@ set(handles.learnObject,'Value',1,'Enable','On');
 % Update handles structure
 guidata(hObject, handles);
 
-
-% --- Executes on button press in learnObject.
+%%% LEARN OBJECT BUTTON
 function learnObject_Callback(hObject, eventdata, handles)
-% hObject    handle to learnObject (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 [handles.objImg, handles.objPts, handles.objFeat] = ...
     learnObject(handles.image, handles.objectRegion);
 
-set(handles.saveObject,'Value',1,'Enable','On');
+set(handles.saveObject, 'Value', 1, 'Enable', 'On');
+
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in saveObject.
+%%% SAVE OBJECT BUTTON
 function saveObject_Callback(hObject, eventdata, handles)
-% hObject    handle to saveObject (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
 saveObject(handles.objImg, handles.objPts, handles.objFeat);
 set(handles.markObject,'Value',1,'Enable','Off');
 set(handles.learnObject,'Value',1,'Enable','Off');
 set(handles.saveObject,'Value',1,'Enable','Off');
-guidata(hObject, handles);
 
-% --- Executes on button press in browseTargetImage.
-function browseTargetImage_Callback(hObject, eventdata, handles)
-% hObject    handle to browseTargetImage (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.targetImage = browseImage();
-axes(handles.axes2);
-imshow(handles.targetImage);
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in targetSnapshot.
+%%% BROWSE TARGET IMAGE BUTTON
+function browseTargetImage_Callback(hObject, eventdata, handles)
+
+handles.targetImage = browseImage();
+axes(handles.axes2);
+imshow(handles.targetImage);
+
+% Update handles structure
+guidata(hObject, handles);
+
+%%% TARGET SNAPSHOT BUTTON
 function targetSnapshot_Callback(hObject, eventdata, handles)
-% hObject    handle to targetSnapshot (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
+% Update handles structure
+guidata(hObject, handles);
 
-% --- Executes on button press in trackTarget.
+%%% TRACK TARGET TOGGLE-BUTTON
 function trackTarget_Callback(hObject, eventdata, handles)
-% hObject    handle to trackTarget (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+% Hint: get(hObject,'Value') returns toggle state of togglebutton
 
-%%%%%%%%
+% When toggle button is set to 'high'
 if get(hObject,'Value')
     disp('Start handles.video.');
+    % Starts the video object
     start(handles.video);
-
-    %%% FROM ObjectFInder_1
-    % Get camImg
+    disp('handles.video started.');
+    
+    %wait(handles.video);
+    
+    % Get (and edit) the cam image
+    disp('Get cam image...');
+    %camImg = getdata(handles.video, 1, 'uint8');
     camImg = getsnapshot(handles.video);
+    disp('camImg acquired!');
+    
     camImg = rgb2gray(camImg);
     %camImg = im2bw(camImg);
     %camImg = histeq(camImg);
 
+    % Detects the SURF-features in the cam image
     camPts  = detectSURFFeatures(camImg);
     %camPts = camPts.selectStrongest(200);
 
+    % Extracts the features around the pts in the image
     camFeat = extractFeatures(camImg, camPts);
 
+    % Get the points with matching features in cam image and the object
     idxPairs = matchFeatures(camFeat, handles.objFeat);
 
+    % Get the matching points in the cam- and ref image respectivly
     matchedCamPts = camPts(idxPairs(:, 1));
     %matchedRefPts = refPts(idxPairs(:, 2));
     
+    % If there are matching pts is the tracker created and initialized
     if ~isempty(matchedCamPts)
-        disp('Found matched points.');
+        disp('Found matching points.');
         % Create a point tracker 
         pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
-
-        % Initialize the tracker with the initial point locations and video frame.
+        % Init. the tracker with the init. pts locations and video frame.
         points = matchedCamPts.Location;
         initialize(pointTracker, points, camImg);
+        % Make a copy of the pts to be used for computing the geometric
+        % trans between the pts in the prev and the current frames
         oldPts = points;
         flag = true;
+        disp('Tracker created and initialized.');
+    % If there are no matching pts, the camera object is stoped
     else
         disp('No matching points!');
         stop(handles.video);
         flag = false;
     end
     
-    %%% FROM ex.m (taken example of pointTracker in VideoPlayer)
-    
-
-    % Make a copy of the points to be used for computing the geometric
-    % transformation between the points in the previous and the current frames
+% When toggle button is set to 'low', the object is stoped
 else
     disp('Stop video object!');
-    stop(handles.video)
+    % Stops the video-object
+    stop(handles.video);
 end
 
-
-%index = 0;
+% If there are matching pts (flag high) the tracking-loop is started
+disp('@loop');
 while get(hObject,'Value') && flag
-    %disp('Starting loop...');
+    %disp('while...');
+    %wait(handles.video);
     
-    %frame = getsnapshot(handles.video);
-    frame = getdata(handles.video, 1, 'uint8');
-    frame = rgb2gray(frame);
+    % Get a new frame. 'getdata()' is suposed to be faster. Object must be
+    % started and 'TriggerRepeat = Inf;'. 
+    frame = getsnapshot(handles.video);
+    %frame = getdata(handles.video, 1, 'uint8');
+    %disp('Frame acquired!');
+    frameBW = rgb2gray(frame);
+    % Increses the contrast in the image
     %frame = histeq(frame);
     
-    % Track the points. Note that some points may be lost.
-    [points, isFound] = step(pointTracker, frame);
+    % Track the points with the tracker on each frame. 
+    % "Note that some points may be lost." 
+    [points, isFound] = step(pointTracker, frameBW);
+    % Gets the found points
     visiblePts = points(isFound, :);
+    % Saves the old pts which still are found
     oldInliers = oldPts(isFound, :);
     
-    if size(visiblePts, 1) >= 1 % need at least 2 points
-        disp('Two points!');
-        % Estimate the geometric transformation between the old points
+    % Only if there are more than two visable pts
+    % 
+    if size(visiblePts, 1) >= 2
+        % Estimate the geometric trans between the old points
         % and the new points and eliminate outliers
         [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
             oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
         
+        % If annotating bbox is to be a polynom, so that it can rotate
         %{
         % Apply the transformation to the bounding box
         [bboxPolygon(1:2:end), bboxPolygon(2:2:end)] = ...
@@ -295,33 +314,30 @@ while get(hObject,'Value') && flag
         % Insert a bounding box around the object being tracked
         videoFrame = insertShape(videoFrame, 'Polygon', bboxPolygon);
          %}
-            
-        % Display tracked points
-        frame = insertMarker(frame, visiblePts, 'X', ...
-            'Color', 'red');
-
-        % Reset the points
+        
+        % Annotated the visable pts in the frame
+        frame = insertMarker(frame, visiblePts, 'X', 'Color', 'red');
+        
+        % Reset the points (and the pointTracker)
         oldPts = visiblePts;
         setPoints(pointTracker, oldPts);
+    else
+       %disp('Less than two points!'); 
     end
 
     % Display the annotated video frame using the video player object
     imshow(frame, 'Parent', handles.axes2);
-    flushdata(handles.video, 'triggers');
-    %index = index + 1;
+    
+    flushdata(handles.video);%, 'triggers');
+    
+    guidata(hObject, handles);
 end
-%%%%%%%%
-
-% Hint: get(hObject,'Value') returns toggle state of togglebutton
 
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes when user attempts to close myCameraGUI.
+%%% Executes when user attempts to close myCameraGUI.
 function tracker_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to myCameraGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
 delete(hObject);
