@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before tracker is made visible.
 function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -80,6 +79,17 @@ guidata(hObject, handles);
 % UIWAIT makes tracker wait for user response (see UIRESUME)
 uiwait(handles.figure1);
 
+% --- Outputs from this function are returned to the command line.
+function varargout = tracker_OutputFcn(hObject, eventdata, handles)
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+handles.output = hObject;
+varargout{1} = handles.output;
+
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
 % hObject    handle to startStopCamera (see GCBO)
@@ -95,18 +105,6 @@ else
     set(handles.startStopCamera,'String','Start Camera')
     stop(handles.video);
 end
-
-% --- Outputs from this function are returned to the command line.
-function varargout = tracker_OutputFcn(hObject, eventdata, handles)
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
-handles.output = hObject;
-varargout{1} = handles.output;
-
 
 % --- Executes on button press in existingObject.
 function existingObject_Callback(hObject, eventdata, handles)
