@@ -36,8 +36,8 @@ initialize(pointTracker, points, camImg);
 % transformation between the points in the previous and the current frames
 oldPts = points;
 
-%index = 0;
-while get(hObject,'Value')
+index = 0;
+while get(
     
     frame = getsnapshot(cam);
     frame = rgb2gray(frame);
@@ -76,6 +76,6 @@ while get(hObject,'Value')
     % Display the annotated video frame using the video player object
     figure(1);
     imshow(frame);
-    %index = index + 1;
+    index = index + 1;
 end
 stop(cam);
