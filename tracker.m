@@ -55,6 +55,9 @@ function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for tracker
 handles.output = hObject;
 
+set(handles.markObject,'Value',1,'Enable','Off');
+set(handles.learnObject,'Value',1,'Enable','Off');
+set(handles.saveObject,'Value',1,'Enable','Off');
 % Create video object
 % Putting the object into manual trigger mode and then
 % starting the object will make GETSNAPSHOT return faster
@@ -140,6 +143,7 @@ axes(handles.axes1);
 imshow(frame);
 axes(handles.axes2);
 start(handles.video);
+set(handles.markObject,'Value',1,'Enable','On');
 guidata(hObject, handles);
 
 % --- Executes on button press in markObject.
@@ -151,6 +155,7 @@ set(handles.startStopCamera,'String','Start Camera');
 stop(handles.video);
 axes(handles.axes1);
 handles.objectRegion = highlightObject(handles.image);
+set(handles.learnObject,'Value',1,'Enable','On');
 % Update handles structure
 guidata(hObject, handles);
 
@@ -161,7 +166,7 @@ function learnObject_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [handles.objImg, handles.objPts, handles.objFeat] = learnObject(handles.image, handles.objectRegion);
-guidata(hObject, handles);
+set(handles.saveObject,'Value',1,'Enable','On');
 % Update handles structure
 guidata(hObject, handles);
 
@@ -171,6 +176,10 @@ function saveObject_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 saveObject(handles.objImg, handles.objPts, handles.objFeat);
+set(handles.markObject,'Value',1,'Enable','Off');
+set(handles.learnObject,'Value',1,'Enable','Off');
+set(handles.saveObject,'Value',1,'Enable','Off');
+guidata(hObject, handles);
 
 % --- Executes on button press in browseTargetImage.
 function browseTargetImage_Callback(hObject, eventdata, handles)
