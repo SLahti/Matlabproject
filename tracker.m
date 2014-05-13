@@ -63,7 +63,9 @@ set(handles.saveObject,'Value',1,'Enable','Off');
 % starting the object will make GETSNAPSHOT return faster
 % since the connection to the camera will already have
 % been established.
+
 handles.video = videoinput('macvideo', 1);
+
 set(handles.video,'TimerPeriod', 0.05, ...
 'TimerFcn',['if(~isempty(gco)),'...
 'handles=guidata(gcf);'... % Update handles
@@ -72,8 +74,11 @@ set(handles.video,'TimerPeriod', 0.05, ...
 'else '...
 'delete(imaqfind);'... % Clean up - delete any image acquisition objects
 'end']);
+
 triggerconfig(handles.video,'manual');
+
 set(handles.video, 'ReturnedColorSpace', 'rgb');
+
 handles.video.FramesPerTrigger = Inf; % Capture frames until we manually stop it
 
 % Update handles structure
@@ -211,7 +216,106 @@ function trackTarget_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+%%%%%%%%
+if get(hObject,'Value')
+    disp('Start handles.video.');
+    start(handles.video);
+
+    %%% FROM ObjectFInder_1
+    % Get camImg
+    camImg = getsnapshot(handles.video);
+    camImg = rgb2gray(camImg);
+    %camImg = im2bw(camImg);
+    %camImg = histeq(camImg);
+
+    camPts  = detectSURFFeatures(camImg);
+    %camPts = camPts.selectStrongest(200);
+
+    camFeat = extractFeatures(camImg, camPts);
+
+    idxPairs = matchFeatures(camFeat, handles.objFeat);
+
+    matchedCamPts = camPts(idxPairs(:, 1));
+    %matchedRefPts = refPts(idxPairs(:, 2));
+    
+    if ~isempty(matchedCamPts)
+        disp('Found matched points.');
+        % Create a point tracker 
+        pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
+
+        % Initialize the tracker with the initial point locations and video frame.
+        points = matchedCamPts.Location;
+        initialize(pointTracker, points, camImg);
+        oldPts = points;
+        flag = true;
+    else
+        disp('No matching points!');
+        stop(handles.video);
+        flag = false;
+    end
+    
+    %%% FROM ex.m (taken example of pointTracker in VideoPlayer)
+    
+
+    % Make a copy of the points to be used for computing the geometric
+    % transformation between the points in the previous and the current frames
+else
+    disp('Stop video object!');
+    stop(handles.video)
+end
+
+
+%index = 0;
+while get(hObject,'Value') && flag
+    %disp('Starting loop...');
+    
+    %frame = getsnapshot(handles.video);
+    frame = getdata(handles.video, 1, 'uint8');
+    frame = rgb2gray(frame);
+    %frame = histeq(frame);
+    
+    % Track the points. Note that some points may be lost.
+    [points, isFound] = step(pointTracker, frame);
+    visiblePts = points(isFound, :);
+    oldInliers = oldPts(isFound, :);
+    
+    if size(visiblePts, 1) >= 1 % need at least 2 points
+        disp('Two points!');
+        % Estimate the geometric transformation between the old points
+        % and the new points and eliminate outliers
+        [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
+            oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
+        
+        %{
+        % Apply the transformation to the bounding box
+        [bboxPolygon(1:2:end), bboxPolygon(2:2:end)] = ...
+            transformPointsForward(xform, bboxPolygon(1:2:end), ...
+                                          bboxPolygon(2:2:end));
+            
+        % Insert a bounding box around the object being tracked
+        videoFrame = insertShape(videoFrame, 'Polygon', bboxPolygon);
+         %}
+            
+        % Display tracked points
+        frame = insertMarker(frame, visiblePts, 'X', ...
+            'Color', 'red');
+
+        % Reset the points
+        oldPts = visiblePts;
+        setPoints(pointTracker, oldPts);
+    end
+
+    % Display the annotated video frame using the video player object
+    imshow(frame, 'Parent', handles.axes2);
+    flushdata(handles.video, 'triggers');
+    %index = index + 1;
+end
+%%%%%%%%
+
 % Hint: get(hObject,'Value') returns toggle state of togglebutton
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes when user attempts to close myCameraGUI.
 function tracker_CloseRequestFcn(hObject, eventdata, handles)
