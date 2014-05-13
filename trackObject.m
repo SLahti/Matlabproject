@@ -1,9 +1,9 @@
-%%%
+%%% trackObject
 %%%
 %%%
 %%%
 
-function trackObject(cam, refFeat)%, tarImg)
+function trackObject(cam, refFeat, handles)%, tarImg)
 
 start(cam);
 
@@ -28,16 +28,9 @@ matchedCamPts = camPts(idxPairs(:, 1));
 % Create a point tracker 
 pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
 
-<<<<<<< HEAD
 % Initialize the tracker with the initial point locations and video frame.
 points = matchedCamPts.Location;
 initialize(pointTracker, points, camImg);
-=======
-% Initialize the tracker with the initial point locations and the initial
-% video frame.
-points = points.Location;
-initialize(pointTracker, points, tarImg);
->>>>>>> Sebastian
 
 % Make a copy of the points to be used for computing the geometric
 % transformation between the points in the previous and the current frames
