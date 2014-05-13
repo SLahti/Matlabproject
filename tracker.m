@@ -141,11 +141,9 @@ handles.image = frame;
 stop(handles.video);
 imshow(frame, 'Parent', handles.axes1);
 start(handles.video);
-<<<<<<< HEAD
-set(handles.markObject,'Value',1,'Enable','On');
-=======
 
->>>>>>> Martin_140513
+set(handles.markObject,'Value',1,'Enable','On');
+
 guidata(hObject, handles);
 
 % --- Executes on button press in markObject.
@@ -153,16 +151,15 @@ function markObject_Callback(hObject, eventdata, handles)
 % hObject    handle to markObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-<<<<<<< HEAD
+
 set(handles.startStopCamera,'String','Start Camera');
 stop(handles.video);
 axes(handles.axes1);
-handles.objectRegion = highlightObject(handles.image);
-set(handles.learnObject,'Value',1,'Enable','On');
-=======
 
 handles.objectRegion = highlightObject(handles.image, handles);
->>>>>>> Martin_140513
+
+set(handles.learnObject,'Value',1,'Enable','On');
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -172,7 +169,9 @@ function learnObject_Callback(hObject, eventdata, handles)
 % hObject    handle to learnObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[handles.objImg, handles.objPts, handles.objFeat] = learnObject(handles.image, handles.objectRegion);
+[handles.objImg, handles.objPts, handles.objFeat] = ...
+    learnObject(handles.image, handles.objectRegion);
+
 set(handles.saveObject,'Value',1,'Enable','On');
 % Update handles structure
 guidata(hObject, handles);

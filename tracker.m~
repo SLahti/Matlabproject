@@ -22,7 +22,7 @@ function varargout = tracker(varargin)
 
 % Edit the above text to modify the response to help tracker
 
-% Last Modified by GUIDE v2.5 12-May-2014 11:01:50
+% Last Modified by GUIDE v2.5 13-May-2014 10:02:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before tracker is made visible.
 function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -56,6 +55,9 @@ function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for tracker
 handles.output = hObject;
 
+set(handles.markObject,'Value',1,'Enable','Off');
+set(handles.learnObject,'Value',1,'Enable','Off');
+set(handles.saveObject,'Value',1,'Enable','Off');
 % Create video object
 % Putting the object into manual trigger mode and then
 % starting the object will make GETSNAPSHOT return faster
@@ -69,7 +71,7 @@ set(handles.video,'TimerPeriod', 0.05, ...
 'set(handles.axes2,''ytick'',[],''xtick'',[]),'... % Remove tickmarks and labels that are inserted when using IMAGE
 'else '...
 'delete(imaqfind);'... % Clean up - delete any image acquisition objects
-'bbend']);
+'end']);
 triggerconfig(handles.video,'manual');
 set(handles.video, 'ReturnedColorSpace', 'rgb');
 handles.video.FramesPerTrigger = Inf; % Capture frames until we manually stop it
@@ -79,6 +81,17 @@ guidata(hObject, handles);
 
 % UIWAIT makes tracker wait for user response (see UIRESUME)
 uiwait(handles.figure1);
+
+% --- Outputs from this function are returned to the command line.
+function varargout = tracker_OutputFcn(hObject, eventdata, handles)
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+handles.output = hObject;
+varargout{1} = handles.output;
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -95,18 +108,6 @@ else
     set(handles.startStopCamera,'String','Start Camera')
     stop(handles.video);
 end
-
-% --- Outputs from this function are returned to the command line.
-function varargout = tracker_OutputFcn(hObject, eventdata, handles)
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
-handles.output = hObject;
-varargout{1} = handles.output;
-
 
 % --- Executes on button press in existingObject.
 function existingObject_Callback(hObject, eventdata, handles)
@@ -135,13 +136,14 @@ function getSnapshot_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 frame = getsnapshot(handles.video);
-handles.image=frame;
+handles.image = frame;
 
 stop(handles.video);
-axes(handles.axes1);
-imshow(frame);
-axes(handles.axes2);
+imshow(frame, 'Parent', handles.axes1);
 start(handles.video);
+
+set(handles.markObject,'Value',1,'Enable','On');
+
 guidata(hObject, handles);
 
 % --- Executes on button press in markObject.
@@ -149,10 +151,15 @@ function markObject_Callback(hObject, eventdata, handles)
 % hObject    handle to markObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 set(handles.startStopCamera,'String','Start Camera');
 stop(handles.video);
 axes(handles.axes1);
-handles.objectRegion = highlightObject(handles.image);
+handles.objectRegion = highlightObject(handles.image, handles);
+set(handles.learnObject,'Value',1,'Enable','On');
+
+handles.objectRegion = highlightObject(handles.image, handles);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -162,8 +169,10 @@ function learnObject_Callback(hObject, eventdata, handles)
 % hObject    handle to learnObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[handles.objImg, handles.objPts, handles.objFeat] = learnObject(handles.image, handles.objectRegion);
-guidata(hObject, handles);
+[handles.objImg, handles.objPts, handles.objFeat] = ...
+    learnObject(handles.image, handles.objectRegion);
+
+set(handles.saveObject,'Value',1,'Enable','On');
 % Update handles structure
 guidata(hObject, handles);
 
@@ -173,6 +182,10 @@ function saveObject_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 saveObject(handles.objImg, handles.objPts, handles.objFeat);
+set(handles.markObject,'Value',1,'Enable','Off');
+set(handles.learnObject,'Value',1,'Enable','Off');
+set(handles.saveObject,'Value',1,'Enable','Off');
+guidata(hObject, handles);
 
 % --- Executes on button press in browseTargetImage.
 function browseTargetImage_Callback(hObject, eventdata, handles)
@@ -197,7 +210,8 @@ function trackTarget_Callback(hObject, eventdata, handles)
 % hObject    handle to trackTarget (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-trackObject(handles.object.img, handles.object.pts, handles.targetImage);
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton
 
 % --- Executes when user attempts to close myCameraGUI.
 function tracker_CloseRequestFcn(hObject, eventdata, handles)
