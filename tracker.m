@@ -22,7 +22,7 @@ function varargout = tracker(varargin)
 
 % Edit the above text to modify the response to help tracker
 
-% Last Modified by GUIDE v2.5 12-May-2014 11:01:50
+% Last Modified by GUIDE v2.5 13-May-2014 10:02:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -89,11 +89,11 @@ function startStopCamera_Callback(hObject, eventdata, handles)
 if strcmp(get(handles.startStopCamera,'String'),'Start Camera')
     % Camera is off. Change button string and start camera.
     set(handles.startStopCamera,'String','Stop Camera')
-    start(handles.video) 
+    start(handles.video);
 else
     % Camera is on. Stop camera and change button string.
     set(handles.startStopCamera,'String','Start Camera')
-    stop(handles.video)
+    stop(handles.video);
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -114,7 +114,7 @@ function existingObject_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 axes(handles.axes1);
-browseObject();
+handles.object = browseObject();
 % Update handles structure
 guidata(hObject, handles);
 
@@ -134,13 +134,23 @@ function getSnapshot_Callback(hObject, eventdata, handles)
 % hObject    handle to getSnapshot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+frame = getsnapshot(handles.video);
+handles.image=frame;
 
+stop(handles.video);
+axes(handles.axes1);
+imshow(frame);
+axes(handles.axes2);
+start(handles.video);
+guidata(hObject, handles);
 
 % --- Executes on button press in markObject.
 function markObject_Callback(hObject, eventdata, handles)
 % hObject    handle to markObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+set(handles.startStopCamera,'String','Start Camera');
+stop(handles.video);
 axes(handles.axes1);
 handles.objectRegion = highlightObject(handles.image);
 % Update handles structure
@@ -153,6 +163,7 @@ function learnObject_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [handles.objImg, handles.objPts, handles.objFeat] = learnObject(handles.image, handles.objectRegion);
+guidata(hObject, handles);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -168,9 +179,9 @@ function browseTargetImage_Callback(hObject, eventdata, handles)
 % hObject    handle to browseTargetImage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.image = browseImage();
+handles.targetImage = browseImage();
 axes(handles.axes2);
-imshow(handles.image);
+imshow(handles.targetImage);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -186,6 +197,8 @@ function trackTarget_Callback(hObject, eventdata, handles)
 % hObject    handle to trackTarget (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton
 
 % --- Executes when user attempts to close myCameraGUI.
 function tracker_CloseRequestFcn(hObject, eventdata, handles)

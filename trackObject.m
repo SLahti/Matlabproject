@@ -12,7 +12,7 @@ pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
 % Initialize the tracker with the initial point locations and the initial
 % video frame.
 points = points.Location;
-initialize(pointTracker, points, videoFrame);
+initialize(pointTracker, points, tarImg);
 
 % Make a copy of the points to be used for computing the geometric
 % transformation between the points in the previous and the current frames
