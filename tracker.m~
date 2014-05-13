@@ -155,10 +155,10 @@ function markObject_Callback(hObject, eventdata, handles)
 set(handles.startStopCamera,'String','Start Camera');
 stop(handles.video);
 axes(handles.axes1);
+handles.objectRegion = highlightObject(handles.image, handles);
+set(handles.learnObject,'Value',1,'Enable','On');
 
 handles.objectRegion = highlightObject(handles.image, handles);
-
-set(handles.learnObject,'Value',1,'Enable','On');
 
 % Update handles structure
 guidata(hObject, handles);
