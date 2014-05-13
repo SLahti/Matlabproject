@@ -133,13 +133,12 @@ function getSnapshot_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 frame = getsnapshot(handles.video);
-handles.image=frame;
+handles.image = frame;
 
 stop(handles.video);
-axes(handles.axes1);
-imshow(frame);
-axes(handles.axes2);
+imshow(frame, 'Parent', handles.axes1);
 start(handles.video);
+
 guidata(hObject, handles);
 
 % --- Executes on button press in markObject.
@@ -147,8 +146,8 @@ function markObject_Callback(hObject, eventdata, handles)
 % hObject    handle to markObject (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-axes(handles.axes1);
-handles.objectRegion = highlightObject(handles.image);
+
+handles.objectRegion = highlightObject(handles.image, handles);
 % Update handles structure
 guidata(hObject, handles);
 
