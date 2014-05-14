@@ -28,7 +28,7 @@ function varargout = tracker(varargin)
 
 % Edit the above text to modify the response to help tracker
 
-% Last Modified by GUIDE v2.5 13-May-2014 10:02:19
+% Last Modified by GUIDE v2.5 14-May-2014 11:29:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -344,3 +344,10 @@ function tracker_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 delete(hObject);
 delete(imaqfind);
+
+
+% --- Executes on button press in findObject.
+function findObject_Callback(hObject, eventdata, handles)
+% hObject    handle to findObject (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
