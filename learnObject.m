@@ -3,9 +3,12 @@
 %%% Output: the croped img, the feature pts. and the features. 
 %%% 
 
-function [objImg, objPts, objFeat] = learnObject(image, objReg)
+function [objImg, objPts, objFeat] = learnObject(image, objReg, handles)
 
-if (size(image, 3) ~= 1)
+if (size(image, 3) == 1)
+    % Already gray?
+    imBW = image;
+else
     %disp('Convert to gray!');
     imBW = rgb2gray(image); % Fulhaxx; vad om varken rgb eller gray?
     %image = histeq(image);
@@ -23,9 +26,9 @@ ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
 %ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
 
 %figure(1);
-imshow(ptsImg);
+imshow(ptsImg, 'Parent', handles.axes1);
 
 objFeat = extractFeatures(objImgBW, objPts);
 
-size(objFeat);
+%size(objFeat);
 

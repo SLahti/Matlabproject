@@ -377,9 +377,9 @@ guidata(hObject, handles);
 %%% FIND OBJECT BUTTON
 function findObject_Callback(hObject, eventdata, handles)
 %disp('Find object...');
-% findObject returns the matching pts between objImg and tarImg
+% findObject returns the matching pts between 
 matchedImgPts = findObject(handles.targetImage, handles.objFeat);
-% Annotates the target image with the points
+
 matchedImg = insertMarker(handles.targetImage, matchedImgPts.Location, ...
                           'X', 'Color', 'green');
 
