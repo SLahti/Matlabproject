@@ -4,7 +4,7 @@
 
 function [image] = browseImage()
 
-[file path] = uigetfile({'*.jpg';'*.png'}, 'Pick a file');
+[file path] = uigetfile({'Images/*.jpg';'Images/*.png'}, 'Pick a file');
 
 filePath = [path file];
 
