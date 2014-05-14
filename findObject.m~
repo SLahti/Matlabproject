@@ -17,7 +17,7 @@ imgPts = imgPts.selectStrongest(250);
 
 imgFeat = extractFeatures(image, imgPts);
 
-ptsImg = insertMarker(image, imgPts.Location, '+', 'Color', 'yellow');
+ptsImg = insertMarker(image, imgPts.Location, 'X', 'Color', 'yellow');
 
 figure(1);
 imshow(ptsImg);
@@ -27,13 +27,10 @@ idxPairs = matchFeatures(imgFeat, objFeat, 'MatchThreshold', 5);
 matchedImgPts = imgPts(idxPairs(:, 1));
 %matchedRefPts = refPts(idxPairs(:, 2));
 
-matchedPtsImg = insertMarker(image, matchedImgPts.Location, 'X', 'Color', 'blue');
+matchedPtsImg = insertMarker(image, matchedImgPts.Location, 'O', 'Color', 'green');
 allPtsImg = insertMarker(ptsImg, matchedImgPts.Location, 'O', 'Color', 'green');
 
 figure(2);
-imshow(allPtsImg);
-
-figure(3);
 imshow(matchedPtsImg);
 
 %In left axes

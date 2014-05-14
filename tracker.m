@@ -234,7 +234,7 @@ if get(hObject,'Value')
 
     % Detects the SURF-features in the cam image
     camPts  = detectSURFFeatures(camImg);
-    %camPts = camPts.selectStrongest(200);
+    camPts = camPts.selectStrongest(100);
 
     % Extracts the features around the pts in the image
     camFeat = extractFeatures(camImg, camPts);
@@ -322,7 +322,9 @@ while get(hObject,'Value') && flag
         oldPts = visiblePts;
         setPoints(pointTracker, oldPts);
     else
+        % If 'all' pts are lost: end loop
        %disp('Less than two points!'); 
+       %flag = false;
     end
 
     % Display the annotated video frame using the video player object
