@@ -64,6 +64,7 @@ handles.output = hObject;
 set(handles.markObject,'Value',1,'Enable','Off');
 set(handles.learnObject,'Value',1,'Enable','Off');
 set(handles.saveObject,'Value',1,'Enable','Off');
+set(handles.trackTarget,'Value',1,'Enable','Off');
 % Create video object
 % Putting the object into manual trigger mode and then
 % starting the object will make GETSNAPSHOT return faster
@@ -111,12 +112,12 @@ function startStopCamera_Callback(hObject, eventdata, handles)
 % Start/Stop Camera
 if strcmp(get(handles.startStopCamera,'String'),'Start Camera')
     % Camera is off. Change button string and start camera.
-    set(handles.startStopCamera,'String','Stop Camera')
+    set(handles.startStopCamera,'String','Stop Camera');
     start(handles.video);
     set(handles.getSnapshot,'Value',1,'Enable','On');
 else
     % Camera is on. Stop camera and change button string.
-    set(handles.startStopCamera,'String','Start Camera')
+    set(handles.startStopCamera,'String','Start Camera');
     stop(handles.video);
     %set(handles.getSnapshot,'Value',1,'Enable','On'); TURN SNAPSHOT OFF!
 end
@@ -159,6 +160,7 @@ if ~isrunning(handles.video)
     disp('getSnapshot: Starting video.');
     %axes(handles.axes2);
     start(handles.video);
+    set(handles.startStopCamera,'String','Stop Camera');
 end
 
 %frame = getsnapshot(handles.video);
@@ -209,8 +211,8 @@ function learnObject_Callback(hObject, eventdata, handles)
     learnObject(handles.rawObjImg, handles.objReg, handles);
 
 set(handles.saveObject, 'Value', 1, 'Enable', 'On');
-%set(handles.findObject, 'Value', 1, 'Enable', 'On');
-%set(handles.trackTarget, 'Value', 1, 'Enable', 'On');
+set(handles.findObject, 'Value', 1, 'Enable', 'On');
+set(handles.trackTarget, 'Value', 1, 'Enable', 'On');
 
 % Update handles structure
 guidata(hObject, handles);
@@ -255,20 +257,17 @@ guidata(hObject, handles);
 %%% TRACK TARGET TOGGLE-BUTTON
 function trackTarget_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of togglebutton
-
 disp('trackTarget button');
 
+if isvalid(handles.video) && ~isrunning(handles.video)
+    disp('video not running. Starting video...');
+    start(handles.video);
+end
+disp('handles.video started.');
+
 % When toggle button is set to 'high'
-if get(hObject,'Value')
-    disp('Start handles.video.');
-    if isvalid(handles.video) && ~isrunning(handles.video)
-        disp('video not running. Starting video...');
-        start(handles.video);
-    end
-    disp('handles.video started.');
-    
-    %wait(handles.video);
-    
+if isvalid(handles.video) && ~get(hObject,'Value')
+     
     % Get (and edit) the cam image
     disp('Get cam image...');
     %camImg = getdata(handles.video, 1, 'uint8');
@@ -284,10 +283,13 @@ if get(hObject,'Value')
     camPts = camPts.selectStrongest(100);
 
     % Extracts the features around the pts in the image
+    disp('camFeat: ');
     camFeat = extractFeatures(camImg, camPts);
+    disp('handles.objFeat: ');
+    %%%%handles.objFeat.Features;
 
     % Get the points with matching features in cam image and the object
-    idxPairs = matchFeatures(camFeat, handles.objFeat);
+    idxPairs = matchFeatures(camFeat, handles.objFeat.Features);
 
     % Get the matching points in the cam- and ref image respectivly
     matchedCamPts = camPts(idxPairs(:, 1));
@@ -318,46 +320,42 @@ if get(hObject,'Value')
     
 % When toggle button is set to 'low', the object is stoped
 else
+    disp('Invalid video object!');
     disp('Stop video object!');
     if isrunning(handles.video)
         disp('Stoping video.');
         stop(handles.video);
     end
+    flag = false;
 end
 
 % If there are matching pts (flag high) the tracking-loop is started
 disp('@loop');
 while get(hObject,'Value') && flag
-    %disp('while...');
-    %wait(handles.video);
     
-    % Get a new frame. 'getdata()' is suposed to be faster. Object must be
-    % started and 'TriggerRepeat = Inf;'. 
+    % Get a new frame. 'getdata()' is suposed to be faster. 
+    % Object must be started and 'TriggerRepeat = Inf;'. 
     frame = getsnapshot(handles.video);
     %frame = getdata(handles.video, 1, 'uint8');
-    %disp('Frame acquired!');
-    frameBW = rgb2gray(frame);
-    % Increses the contrast in the image
-    %frame = histeq(frame);
     
     % Track the points with the tracker on each frame. 
     % "Note that some points may be lost." 
-    [points, isFound] = step(pointTracker, frameBW);
+    [points, isFound] = step(pointTracker, frame);
     % Gets the found points
     visiblePts = points(isFound, :);
     % Saves the old pts which still are found
-    oldInliers = oldPts(isFound, :);
+    %oldInliers = oldPts(isFound, :);
     
     % Only if there are more than two visable pts
-    % 
     if size(visiblePts, 1) >= 2
+        %{
         % Estimate the geometric trans between the old points
         % and the new points and eliminate outliers
-        [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
-            oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
+     %   [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
+      %      oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
         
         % If annotating bbox is to be a polynom, so that it can rotate
-        %{
+        
         % Apply the transformation to the bounding box
         [bboxPolygon(1:2:end), bboxPolygon(2:2:end)] = ...
             transformPointsForward(xform, bboxPolygon(1:2:end), ...
@@ -368,47 +366,55 @@ while get(hObject,'Value') && flag
          %}
         
         % Annotated the visable pts in the frame
-        frame = insertMarker(frame, visiblePts, 'X', 'Color', 'red');
+        imageOut = insertMarker(frame, visiblePts, 'X', 'Size', 6, ...
+                                'Color', 'green');
         
         % Reset the points (and the pointTracker)
-        oldPts = visiblePts;
-        setPoints(pointTracker, oldPts);
+        %oldPts = visiblePts;
+        %setPoints(pointTracker, oldPts);
     else
         % If 'all' pts are lost: end loop
-       %disp('Less than two points!'); 
-       %flag = false;
+        disp('Less than two points!'); 
+        flag = false;
     end
     
     % Display the annotated video frame using the video player object
-    imshow(frame, 'Parent', handles.axes2);
+    imshow(imageOut, 'Parent', handles.axes2);
     
     flushdata(handles.video);%, 'triggers');
     
     guidata(hObject, handles);
 end
 
+% Clean
+if exist('pointTracker')
+    release(pointTracker);
+    delete(pointTracker);
+    disp('Released and deleted.');
+end
+
+clear points isFound visablePts; 
+
+disp('End trackTarget.');
+
 % Update handles structure
 guidata(hObject, handles);
 
 %%% FIND OBJECT BUTTON
 function findObject_Callback(hObject, eventdata, handles)
-%disp('Find object...');
+disp('Find object...');
 % findObject returns the matching pts between objImg and tarImg
-matchedImgPts = findObject(handles.targetImage, handles.objFeat);
-% Annotates the target image with the points
-matchedImg = insertMarker(handles.targetImage, matchedImgPts.Location, ...
-                          'X', 'Color', 'green');
-
-%disp('Showing matchedImg...');
-imshow(matchedImg, 'Parent', handles.axes2);
-%disp('Done!');
+findObject(handles.targetImage, handles.objFeat, handles);
+disp('Done!');
+% Update GUI-handles
 guidata(hObject, handles);
 
 %%% Executes when user attempts to close tracker.
 function tracker_CloseRequestFcn(hObject, eventdata, handles)
-
-stop(handles.video);
+if isrunning(handles.video)
+    stop(handles.video);
+end
 delete(handles.video);
 % Hint: delete(hObject) closes the figure
 delete(hObject);
-delete(imaqfind);
+%delete(imaqfind);
