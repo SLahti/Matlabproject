@@ -5,7 +5,7 @@
 
 function [objReg] = highlightObject(image, handles)
 
-axes(handles.axes1);
+%axes(handles.axes1);
 imshow(image, 'Parent', handles.axes1);
 objReg = round(getPosition(imrect));
 

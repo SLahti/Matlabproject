@@ -256,13 +256,10 @@ guidata(hObject, handles);
 function trackTarget_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of togglebutton
 
-disp('trackTarget button');
-
 % When toggle button is set to 'high'
 if get(hObject,'Value')
     disp('Start handles.video.');
-    if isvalid(handles.video) && ~isrunning(handles.video)
-        disp('video not running. Starting video...');
+    if ~isrunning(handles.video)
         start(handles.video);
     end
     disp('handles.video started.');
@@ -310,7 +307,7 @@ if get(hObject,'Value')
     else
         disp('No matching points!');
         if isrunning(handles.video)
-            disp('Stoping video.');
+            
             stop(handles.video);
         end
         flag = false;
@@ -319,10 +316,8 @@ if get(hObject,'Value')
 % When toggle button is set to 'low', the object is stoped
 else
     disp('Stop video object!');
-    if isrunning(handles.video)
-        disp('Stoping video.');
-        stop(handles.video);
-    end
+    % Stops the video-object
+    stop(handles.video);
 end
 
 % If there are matching pts (flag high) the tracking-loop is started
