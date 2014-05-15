@@ -9,4 +9,4 @@ img  = image;
 pts  = points;
 feat = features;
 
-uisave({'img', 'pts', 'feat'}, 'object.mat');
+uisave({'img', 'pts', 'feat'}, './Objects/object.mat');
