@@ -2,7 +2,7 @@
 %%% 2014-05-13
 %%% GUI that finds or tracks an object in an image or video feed. 
 %%% The object can be browsed from a .mat-file, or saved from an snapshot.
-%%% By: Sebastian Lahti and Martin H?rnwall
+%%% By: Sebastian Lahti and Martin Härnwall
 
 function varargout = tracker(varargin)
 %TRACKER M-file for tracker.fig
