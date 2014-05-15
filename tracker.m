@@ -156,7 +156,7 @@ function getSnapshot_Callback(hObject, eventdata, handles)
 
 % Start video if not running
 if ~isrunning(handles.video)
-    axes(handles.axes2);
+    %axes(handles.axes2);
     start(handles.video);
 end
 
@@ -185,9 +185,11 @@ function markObject_Callback(hObject, eventdata, handles)
 %handles.objReg = highlightObject(handles.rawObjImg, handles);
 
 % This may be buggy...
+stop(handles.video);
 axes(handles.axes1);
 %imshow(image, 'Parent', handles.axes1);
 handles.objReg = round(getPosition(imrect));
+start(handles.video);
 
 higImg = insertShape(handles.rawObjImg, 'Rectangle', handles.objReg, ...
                      'Color', 'red');
