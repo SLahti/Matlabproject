@@ -261,7 +261,8 @@ disp('trackTarget button');
 % When toggle button is set to 'high'
 if get(hObject,'Value')
     disp('Start handles.video.');
-    if ~isrunning(handles.video)
+    if isvalid(handles.video) && ~isrunning(handles.video)
+        disp('video not running. Starting video...');
         start(handles.video);
     end
     disp('handles.video started.');
