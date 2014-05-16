@@ -1,60 +1,35 @@
 %%% findObject
-%%% Input: An image to serch for objects in, the objects features
+%%% Input:  An image to serch for objects in, the objects features
 %%% Output: Nothing now. The matched points...?
 %%% Displays an image with all of its pts, the matching ones highlighted. 
 
 function findObject(image, objFeat, handles) % Returns nothing! 
-disp('In findObject...');
 
+% Converts to gray if RGB
 if (size(image, 3) == 1)
-    imBW = image;
+    imgBW = image;
 else
-    imBW = rgb2gray(image); % Fulhaxx; vad om varken rgb eller gray?
-    %image = histeq(image);
+    imgBW = rgb2gray(image);
 end
+% Detect features in target image
+imgPts = detectSURFFeatures(imgBW);
+imgPts = imgPts.selectStrongest(200);
 
-% Show the target image in right axes
-%imshow(image, 'Parent', axes2); hold on;
-%figure(1);
-%imshow(image);
-% Detect features in the target image
-disp('Detecting features...');
-imgPts  = detectSURFFeatures(imBW);
-imgPts  = imgPts.selectStrongest(100);
-disp('Extracting features...');
-imgFeat = extractFeatures(imBW, imgPts);
+% Show all the feature pts at first
+%allPtsImg = insertMarker(image, imgPts.Location, 'x', ...
+%                         'Color', 'white', 'Size', 4);
+%imshow(allPtsImg, 'Parent', handles.axes2);
 
-% Image with ALL the feature-pts 
-%ptsImg = insertMarker(image, imgPts.Location, '+', 'Color', 'yellow');
-%imshow(ptsImg);
+% Extract and match features
+[imgFeat, validPts] = extractFeatures(imgBW, imgPts, 'Method', 'SURF');
+indexPairs = matchFeatures(imgFeat, objFeat, 'MatchThreshold', 1);
 
-disp('Matching features...');
-idxPairs = matchFeatures(imgFeat, objFeat, 'MatchThreshold', 1);
-
-matchPts = imgPts(idxPairs(:, 1));
-
-% Annotates the target image with the points
-ptsImage = insertMarker(image, matchPts.Location, 'X', 'Color', 'green');
-
-disp('Showing matchedImg...');
-imshow(ptsImage, 'Parent', handles.axes2);
-
-disp('findObject done!');
+% The matching pts
+matchPts = imgPts(indexPairs(:, 1));
 %matchedRefPts = refPts(idxPairs(:, 2));
 
-% Felsökning och testing
-%{
-matchedPtsImg = insertMarker(image, matchedImgPts.Location, 'X', 'Color', 'blue');
-allPtsImg = insertMarker(ptsImg, matchedImgPts.Location, 'O', 'Color', 'green');
-figure(2);
-imshow(allPtsImg);
-figure(3);
-imshow(matchedPtsImg);
-%In left axes
-hold on; 
-plot(camPts.Location(:, 1), objPts.Location(:, 2), 'O', 'Color', 'green');
-%In right axes
-figure(3);
-plot(matchedImgPts.Location(:, 1), matchedImgPts.Location(:, 2), ...
-     'O', 'Color', 'green');
-%}
+% Annotates the target image with the points
+matchImage = insertMarker(image, matchPts.Location, 'X', ...
+                          'Color', 'green', 'Size', 7);
+
+imshow(matchImage, 'Parent', handles.axes2);

@@ -1,5 +1,5 @@
 %%% tracker.m
-%%% 2014-05-13
+%%% 2014-05-17
 %%% GUI that finds or tracks an object in an image or video feed. 
 %%% The object can be browsed from a .mat-file, or saved from an snapshot.
 %%% By: Sebastian Lahti and Martin Härnwall
@@ -49,7 +49,7 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-%%% Executes just before tracker is made visible.
+%%% SETUP
 function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
@@ -61,10 +61,13 @@ function tracker_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for tracker
 handles.output = hObject;
 
-set(handles.markObject,'Value',1,'Enable','Off');
+set(handles.markObject, 'Value',1,'Enable','Off');
 set(handles.learnObject,'Value',1,'Enable','Off');
-set(handles.saveObject,'Value',1,'Enable','Off');
+set(handles.saveObject, 'Value',1,'Enable','Off');
 set(handles.trackTarget,'Value',1,'Enable','Off');
+%set(handles.getSnapshot,'Value',1,'Enable','Off');
+set(handles.findObject, 'Value',1,'Enable','Off');
+
 % Create video object
 % Putting the object into manual trigger mode and then
 % starting the object will make GETSNAPSHOT return faster
@@ -111,11 +114,14 @@ function startStopCamera_Callback(hObject, eventdata, handles)
 
 % Start/Stop Camera
 if strcmp(get(handles.startStopCamera,'String'),'Start Camera')
+    disp('Starting camera...');
     % Camera is off. Change button string and start camera.
     set(handles.startStopCamera,'String','Stop Camera');
     start(handles.video);
-    set(handles.getSnapshot,'Value',1,'Enable','On');
+    %set(handles.getSnapshot,'Value',1,'Enable','On');
+    set(handles.findObject,'Value',1,'Enable','Off');
 else
+    disp('Stopping camera...');
     % Camera is on. Stop camera and change button string.
     set(handles.startStopCamera,'String','Start Camera');
     stop(handles.video);
@@ -127,14 +133,20 @@ guidata(hObject, handles);
 
 %%% BROWSE EXISTING OBJECT BUTTON
 function existingObject_Callback(hObject, eventdata, handles)
-% Get an object with image, pts and features.
+disp('BROWSE EXISTING OBJECT BUTTON');
+
+% Get an object with image, pts, features and valid points
 object = browseObject();
+
 % Annotates the pts in the image and shows it in axes1
 objImg = insertMarker(object.img, object.pts, 'X', 'Color', 'yellow');
 imshow(objImg, 'Parent', handles.axes1);
+
 % Saves the features from the object as an/with a handle
 handles.objFeat = object.feat;
+handles.validPts = object.valPts;
 
+% Enable track- and find-buttons
 set(handles.trackTarget,'Value',1,'Enable','On');
 set(handles.findObject,'Value',1,'Enable','On');
 
@@ -143,10 +155,13 @@ guidata(hObject, handles);
 
 %%% BROWSE IMAGE BUTTON
 function browseImage_Callback(hObject, eventdata, handles)
+disp('BROWSE IMAGE BUTTON');
+
 % Brows an image and show it in axes1
 handles.rawObjImg = browseImage();
 imshow(handles.rawObjImg, 'Parent', handles.axes1);
 
+% Enable markObject-button
 set(handles.markObject,'Value',1,'Enable','On');
 
 % Update handles structure
@@ -154,25 +169,19 @@ guidata(hObject, handles);
 
 %%% GET SNAPSHOT BUTTON
 function getSnapshot_Callback(hObject, eventdata, handles)
+disp('GET SNAPSHOT BUTTON');
 
 % Start video if not running
 if ~isrunning(handles.video)
-    disp('getSnapshot: Starting video.');
-    %axes(handles.axes2);
     start(handles.video);
     set(handles.startStopCamera,'String','Stop Camera');
 end
 
-%frame = getsnapshot(handles.video);
-%frame = getdata(handles.video, 1, 'uint8');
-%handles.rawObjImg = frame; % Magically solves some bug...
-
+% Get and show snapshot
 handles.rawObjImg = getsnapshot(handles.video);
-
-%stop(handles.video);
 imshow(handles.rawObjImg, 'Parent', handles.axes1);
-%start(handles.video);
 
+% Enable markObject-button
 set(handles.markObject,'Value',1,'Enable','On');
 
 % Update handles structure
@@ -180,24 +189,24 @@ guidata(hObject, handles);
 
 %%% MARK OBJECT BUTTON
 function markObject_Callback(hObject, eventdata, handles)
+disp('MARK OBJECT BUTTON');
 
-%set(handles.startStopCamera,'String','Start Camera');
-%stop(handles.video);
-
-%axes(handles.axes1);
-%handles.objReg = highlightObject(handles.rawObjImg, handles);
-
-% This may be buggy...
+% Need to stop camera in order to use imrect?
 stop(handles.video);
-axes(handles.axes1);
-%imshow(image, 'Parent', handles.axes1);
-handles.objReg = round(getPosition(imrect));
-start(handles.video);
+%set(handles.startStopCamera,'String','Start Camera');
+%set(handles.startStopCamera,'Value',1,'Enable','Off');
 
-higImg = insertShape(handles.rawObjImg, 'Rectangle', handles.objReg, ...
-                     'Color', 'red');
+% Click&Drag-rectangle in image. Returns region.
+axes(handles.axes1);
+%imshow(handles.rawObjImg, 'Parent', handles.axes1);
+handles.objReg = round(getPosition(imrect));
+
+% Shows the marked region
+higImg = insertShape(handles.rawObjImg, 'FilledRectangle', ...
+                     handles.objReg, 'Color', 'cyan', 'Opacity', 0.2);
 imshow(higImg, 'Parent', handles.axes1);
 
+% Enable learnObject-button
 set(handles.learnObject,'Value',1,'Enable','On');
 
 % Update handles structure
@@ -205,11 +214,13 @@ guidata(hObject, handles);
 
 %%% LEARN OBJECT BUTTON
 function learnObject_Callback(hObject, eventdata, handles)
+disp('LEARN OBJECT BUTTON');
 
-% The learnObject-function...
-[handles.objImg, handles.objPts, handles.objFeat] = ...
+% The learnObject-func. returns obj.- image, pts, feat and valid pts.
+[handles.objImg, handles.objPts, handles.objFeat, handles.validPts] = ...
     learnObject(handles.rawObjImg, handles.objReg, handles);
 
+% Enables save-, find- and track-buttons
 set(handles.saveObject, 'Value', 1, 'Enable', 'On');
 set(handles.findObject, 'Value', 1, 'Enable', 'On');
 set(handles.trackTarget, 'Value', 1, 'Enable', 'On');
@@ -219,8 +230,13 @@ guidata(hObject, handles);
 
 %%% SAVE OBJECT BUTTON
 function saveObject_Callback(hObject, eventdata, handles)
+disp('SAVE OBJECT BUTTON');
 
-saveObject(handles.objImg, handles.objPts, handles.objFeat);
+% Saves an .MAT-file with obj. image, feature pts, features and valid pts
+saveObject(handles.objImg, handles.objPts, ...
+           handles.objFeat, handles.validPts);
+
+% Disable mark-, learn- and save object-buttons
 set(handles.markObject,'Value',1,'Enable','Off');
 set(handles.learnObject,'Value',1,'Enable','Off');
 set(handles.saveObject,'Value',1,'Enable','Off');
@@ -230,10 +246,17 @@ guidata(hObject, handles);
 
 %%% BROWSE TARGET IMAGE BUTTON
 function browseTargetImage_Callback(hObject, eventdata, handles)
+disp('BROWSE TARGET IMAGE BUTTON');
 
+% Stop camera
+stop(handles.video);
+set(handles.startStopCamera,'String','Start Camera');
+
+% browseImage-func starts a prompt and returns an image object.
 handles.targetImage = browseImage();
 imshow(handles.targetImage, 'Parent', handles.axes2);
 
+% Enable findObject-button
 set(handles.findObject,'Value',1,'Enable','On');
 
 % Update handles structure
@@ -241,176 +264,58 @@ guidata(hObject, handles);
 
 %%% TARGET SNAPSHOT BUTTON
 function targetSnapshot_Callback(hObject, eventdata, handles)
+disp('TARGET SNAPSHOT BUTTON');
 
-if ~srunning(handles.video);
+% Starts the camera if it is not running
+if ~isrunning(handles.video)
     start(handles.video);
+    set(handles.startStopCamera,'String','Stop Camera');
 end
 
+% Get a targetImage from the target window, stop cam and disp. it.  
+axes(handles.axes2);
 handles.targetImage = getsnapshot(handles.video);
+stop(handles.video);
 imshow(handles.targetImage, 'Parent', handles.axes2);
 
+% Update start/stop-button and enable findObject-button
+set(handles.startStopCamera,'String','Start Camera');
 set(handles.findObject,'Value',1,'Enable','On');
-
-% Update handles structure
-guidata(hObject, handles);
-
-%%% TRACK TARGET TOGGLE-BUTTON
-function trackTarget_Callback(hObject, eventdata, handles)
-% Hint: get(hObject,'Value') returns toggle state of togglebutton
-disp('trackTarget button');
-
-if isvalid(handles.video) && ~isrunning(handles.video)
-    disp('video not running. Starting video...');
-    start(handles.video);
-end
-disp('handles.video started.');
-
-% When toggle button is set to 'high'
-if isvalid(handles.video) && ~get(hObject,'Value')
-     
-    % Get (and edit) the cam image
-    disp('Get cam image...');
-    %camImg = getdata(handles.video, 1, 'uint8');
-    camImg = getsnapshot(handles.video);
-    disp('camImg acquired!');
-    
-    camImg = rgb2gray(camImg);
-    %camImg = im2bw(camImg);
-    %camImg = histeq(camImg);
-
-    % Detects the SURF-features in the cam image
-    camPts  = detectSURFFeatures(camImg);
-    camPts = camPts.selectStrongest(100);
-
-    % Extracts the features around the pts in the image
-    disp('camFeat: ');
-    camFeat = extractFeatures(camImg, camPts);
-    disp('handles.objFeat: ');
-    %%%%handles.objFeat.Features;
-
-    % Get the points with matching features in cam image and the object
-    idxPairs = matchFeatures(camFeat, handles.objFeat.Features);
-
-    % Get the matching points in the cam- and ref image respectivly
-    matchedCamPts = camPts(idxPairs(:, 1));
-    %matchedRefPts = refPts(idxPairs(:, 2));
-    
-    % If there are matching pts is the tracker created and initialized
-    if ~isempty(matchedCamPts)
-        disp('Found matching points.');
-        % Create a point tracker 
-        pointTracker = vision.PointTracker('MaxBidirectionalError', 2);
-        % Init. the tracker with the init. pts locations and video frame.
-        points = matchedCamPts.Location;
-        initialize(pointTracker, points, camImg);
-        % Make a copy of the pts to be used for computing the geometric
-        % trans between the pts in the prev and the current frames
-        oldPts = points;
-        flag = true;
-        disp('Tracker created and initialized.');
-    % If there are no matching pts, the camera object is stoped
-    else
-        disp('No matching points!');
-        if isrunning(handles.video)
-            disp('Stoping video.');
-            stop(handles.video);
-        end
-        flag = false;
-    end
-    
-% When toggle button is set to 'low', the object is stoped
-else
-    disp('Invalid video object!');
-    disp('Stop video object!');
-    if isrunning(handles.video)
-        disp('Stoping video.');
-        stop(handles.video);
-    end
-    flag = false;
-end
-
-% If there are matching pts (flag high) the tracking-loop is started
-disp('@loop');
-while get(hObject,'Value') && flag
-    
-    % Get a new frame. 'getdata()' is suposed to be faster. 
-    % Object must be started and 'TriggerRepeat = Inf;'. 
-    frame = getsnapshot(handles.video);
-    %frame = getdata(handles.video, 1, 'uint8');
-    
-    % Track the points with the tracker on each frame. 
-    % "Note that some points may be lost." 
-    [points, isFound] = step(pointTracker, frame);
-    % Gets the found points
-    visiblePts = points(isFound, :);
-    % Saves the old pts which still are found
-    %oldInliers = oldPts(isFound, :);
-    
-    % Only if there are more than two visable pts
-    if size(visiblePts, 1) >= 2
-        %{
-        % Estimate the geometric trans between the old points
-        % and the new points and eliminate outliers
-     %   [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
-      %      oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
-        
-        % If annotating bbox is to be a polynom, so that it can rotate
-        
-        % Apply the transformation to the bounding box
-        [bboxPolygon(1:2:end), bboxPolygon(2:2:end)] = ...
-            transformPointsForward(xform, bboxPolygon(1:2:end), ...
-                                          bboxPolygon(2:2:end));
-            
-        % Insert a bounding box around the object being tracked
-        videoFrame = insertShape(videoFrame, 'Polygon', bboxPolygon);
-         %}
-        
-        % Annotated the visable pts in the frame
-        imageOut = insertMarker(frame, visiblePts, 'X', 'Size', 6, ...
-                                'Color', 'green');
-        
-        % Reset the points (and the pointTracker)
-        %oldPts = visiblePts;
-        %setPoints(pointTracker, oldPts);
-    else
-        % If 'all' pts are lost: end loop
-        disp('Less than two points!'); 
-        flag = false;
-    end
-    
-    % Display the annotated video frame using the video player object
-    imshow(imageOut, 'Parent', handles.axes2);
-    
-    flushdata(handles.video);%, 'triggers');
-    
-    guidata(hObject, handles);
-end
-
-% Clean
-if exist('pointTracker')
-    release(pointTracker);
-    delete(pointTracker);
-    disp('Released and deleted.');
-end
-
-clear points isFound visablePts; 
-
-disp('End trackTarget.');
 
 % Update handles structure
 guidata(hObject, handles);
 
 %%% FIND OBJECT BUTTON
 function findObject_Callback(hObject, eventdata, handles)
-disp('Find object...');
-% findObject returns the matching pts between objImg and tarImg
+disp('FIND OBJECT BUTTON');
+
+% Wierd bugg. Stopping camera helps...
+stop(handles.video);
+set(handles.startStopCamera,'String','Start Camera');
+
+% findObject-func shows the matching pts
 findObject(handles.targetImage, handles.objFeat, handles);
-disp('Done!');
+
 % Update GUI-handles
+guidata(hObject, handles);
+
+%%% TRACK TARGET TOGGLE-BUTTON
+function trackTarget_Callback(hObject, eventdata, handles)
+disp('TRACK TARGET TOGGLE-BUTTON');
+% Hint: get(hObject,'Value') returns toggle state of togglebutton
+
+if get(hObject,'Value')
+   
+    frame = getsnapshot(handles.video);
+    
+end
+
+% Update handles structure
 guidata(hObject, handles);
 
 %%% Executes when user attempts to close tracker.
 function tracker_CloseRequestFcn(hObject, eventdata, handles)
+disp('Close program.');
 if isrunning(handles.video)
     stop(handles.video);
 end

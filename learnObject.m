@@ -3,32 +3,27 @@
 %%% Output: the croped img, the feature pts. and the features. 
 %%% 
 
-function [objImg, objPts, objFeat] = learnObject(image, objReg, handles)
-
+function [objImg, objPts, objFeat, validPts] = ...
+         learnObject(image, objReg, handles)
+     
+% Converts to gray if RGB
 if (size(image, 3) == 1)
-    % Already gray?
-    imBW = image;
+    imgBW = image;
 else
-    %disp('Convert to gray!');
-    imBW = rgb2gray(image); % Fulhaxx; vad om varken rgb eller gray?
-    %image = histeq(image);
+    imgBW = rgb2gray(image);
 end
 
+% Crop the image to an 'object image'
 objImg   = imcrop(image, objReg);
-objImgBW = imcrop(imBW, objReg);
+objImgBW = imcrop(imgBW, objReg);
 
+% Detect features
 objPts = detectSURFFeatures(objImgBW);
-%objPts = objPts.selectStrongest(200);
-ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
+objPts = objPts.selectStrongest(200);
 
-%objPts = detectMinEigenFeatures(objImg);
-%objPts = objPts.selectStrongest(200);
-%ptsImg = insertMarker(objImg, objPts.Location, 'x', 'Color', 'green');
-
-%figure(1);
+% Show the feature pts
+ptsImg = insertMarker(objImg, objPts.Location, '+', 'Color', 'cyan');
 imshow(ptsImg, 'Parent', handles.axes1);
 
-objFeat = extractFeatures(objImgBW, objPts);
-
-%size(objFeat);
-
+% Extract the features and the valid pts
+[objFeat, validPts] = extractFeatures(objImgBW, objPts, 'Method', 'SURF');

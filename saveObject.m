@@ -3,10 +3,11 @@
 %%% Output: none
 %%% Saves an 'object', as an .mat-file.
 
-function saveObject(image, points, features)
+function saveObject(image, points, features, validPts)
 
-img  = image;
-pts  = points;
-feat = features;
+img    = image;
+pts    = points;
+feat   = features;
+valPts = validPts;
 
-uisave({'img', 'pts', 'feat'}, 'object.mat');
+uisave({'img', 'pts', 'feat', 'valPts'}, 'object.mat');
