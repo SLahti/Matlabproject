@@ -3,7 +3,7 @@
 %%% Output: The marked region
 %%%
 
-function [region] = highlightObject(image, handles)
+function [region] = markObject(image, handles)
 disp('1');
 axes(handles.axes1);
 disp('2');
