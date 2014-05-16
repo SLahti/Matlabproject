@@ -315,21 +315,12 @@ if ~get(hObject,'Value')
     start(handles.video);
     disp('Initialized.');
     
-    trackTarget(tracker, flag, handles);
+    
     
 elseif get(hObject,'Value')
-    stop(handles.video);
-    
-    if exist('pointTracker')
-        release(tracker);
-        delete(tracker);
-    end
-
-    clear points isFound visablePts; 
-    disp('Cleand.');
+    flag = false;
 end
 
-%{
 % While toggle is high
 while flag %~get(hObject,'Value') && flag
     
@@ -352,10 +343,8 @@ while flag %~get(hObject,'Value') && flag
     imshow(frame, 'Parent', handles.axes2);
     
 end
-%}
 
-%{
-% When toggle goes low: Clean
+% When toggle goed low: Clean
 if get(hObject,'Value')
     
     stop(handles.video);
@@ -368,7 +357,6 @@ if get(hObject,'Value')
     clear points isFound visablePts; 
     disp('Cleand.');
 end
-%}
 
 % Update handles structure
 guidata(hObject, handles);

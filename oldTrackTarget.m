@@ -1,44 +1,34 @@
-%%% newTrackTarget
+%%% trackObject
 %%%
 %%%
 %%%
 
-function newTrackTarget()%video, refFeat)
+function trackTarget(video, refFeat, handles)
 
-%%%%% For testing %%%%%
-video = videoinput('macvideo', 1);
-triggerconfig(video,'manual');
-set(video, 'ReturnedColorSpace', 'rgb');
-video.FramesPerTrigger = Inf;
-video.TriggerRepeat = 1;
+if isvalid(handles.video) && ~isrunning(handles.video)
+    disp('video not running. Starting video...');
+    start(handles.video);
+end
+disp('handles.video started.');
 
-refImg = getsnapshot(video);%imread('Images/img3.jpg');
-figure(1);
-imshow(refImg);
-objReg = round(getPosition(imrect));
-refImgBW = rgb2gray(refImg);
-objImg   = imcrop(refImg, objReg);
-objImgBW = imcrop(refImgBW, objReg);
-
-objPts = detectSURFFeatures(objImgBW);
-objPts = objPts.selectStrongest(200);
-
-[refFeat, validPts] = extractFeatures(refImgBW, objPts, 'Method', 'SURF');
-
-start(video);
-
-% % % % % % % % % % % % 
-
-    frame = getsnapshot(video);
+% When toggle button is set to 'high'
+if isvalid(handles.video) && ~get(hObject,'Value')
+     
+    % Get (and edit) the cam image
+    disp('Get cam image...'); 
+    %camImg = getdata(handles.video, 1, 'uint8');
+    frame = getsnapshot(handles.video);
+    disp('camImg acquired!');
     
-    figure(1);
-    imshow(frame);
-    
+    % Check if/convert to gray
     if (size(frame, 3) == 1)
-        imgBW = frame;
+        imgBW = image;
     else
-        imgBW = rgb2gray(frame);
+        imgBW = rgb2gray(frame); % Fulhaxx; vad om varken rgb eller gray?
     end
+    
+    %camImg = im2bw(camImg);
+    %camImg = histeq(camImg);
 
     % Detects the SURF-features in the cam image
     camPts = detectSURFFeatures(imgBW);
@@ -46,16 +36,17 @@ start(video);
 
     % Extracts the features around the pts in the image
     camFeat = extractFeatures(imgBW, camPts);
+    disp('camFeat: ');
+    size(camFeat)
+    disp('handles.objFeat: ');
+    size(handles.objFeat.Features)
 
     % Get the points with matching features in cam image and the object
-    idxPairs = matchFeatures(camFeat, refFeat);
+    idxPairs = matchFeatures(camFeat, handles.objFeat.Features);
 
     % Get the matching points in the cam- and ref image respectivly
     matchedCamPts = camPts(idxPairs(:, 1));
     %matchedRefPts = refPts(idxPairs(:, 2));
-    
-    disp('matchedCamPts: ');
-    size(matchedCamPts)
     
     % If there are matching pts is the tracker created and initialized
     if ~isempty(matchedCamPts)
@@ -67,39 +58,54 @@ start(video);
         initialize(pointTracker, points, frame);
         % Make a copy of the pts to be used for computing the geometric
         % trans between the pts in the prev and the current frames
-        %oldPts = points;
+        oldPts = points;
         flag = true;
         disp('Tracker created and initialized.');
     % If there are no matching pts, the camera object is stoped
     else
         disp('No matching points!');
-        if isrunning(video)
+        if isrunning(handles.video)
             disp('Stoping video.');
-            stop(video);
+            stop(handles.video);
         end
-        close(figure(1));
         flag = false;
     end
+    
+% When toggle button is set to 'low', the object is stoped
+else
+    disp('Invalid video object!');
+    disp('Stop video object!');
+    if isvalid(handles.video) && isrunning(handles.video)
+        disp('Stoping video.');
+        stop(handles.video);
+    end
+    flag = false;
+end
 
 % If there are matching pts (flag high) the tracking-loop is started
 disp('@loop');
-idx = 0;
-while flag
-    idx = idx + 1;
+while get(hObject,'Value') && flag
     
-    frame = getsnapshot(video);
+    % Get a new frame. 'getdata()' is suposed to be faster. 
+    % Object must be started and 'TriggerRepeat = Inf;'. 
+    frame = getsnapshot(handles.video);
+    %frame = getdata(handles.video, 1, 'uint8');
     
+    % Track the points with the tracker on each frame. 
+    % "Note that some points may be lost." 
     [points, isFound] = step(pointTracker, frame);
-    
+    % Gets the found points
     visiblePts = points(isFound, :);
+    % Saves the old pts which still are found
+    %oldInliers = oldPts(isFound, :);
     
     % Only if there are more than two visable pts
     if size(visiblePts, 1) >= 2
         %{
         % Estimate the geometric trans between the old points
         % and the new points and eliminate outliers
-        [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
-            oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
+     %   [xform, oldInliers, visiblePts] = estimateGeometricTransform( ...
+      %      oldInliers, visiblePts, 'similarity', 'MaxDistance', 4);
         
         % If annotating bbox is to be a polynom, so that it can rotate
         
@@ -113,8 +119,8 @@ while flag
          %}
         
         % Annotated the visable pts in the frame
-        frame = insertMarker(frame, visiblePts, 'X', 'Size', 10, ...
-                                'Color', 'yellow');
+        imageOut = insertMarker(frame, visiblePts, 'X', 'Size', 6, ...
+                                'Color', 'green');
         
         % Reset the points (and the pointTracker)
         %oldPts = visiblePts;
@@ -126,19 +132,12 @@ while flag
     end
     
     % Display the annotated video frame using the video player object
-    figure(1);
-    imshow(frame);%, 'Parent', handles.axes2);
+    imshow(imageOut, 'Parent', handles.axes2);
     
-    flushdata(video);%, 'triggers');
+    flushdata(handles.video);%, 'triggers');
     
-    %guidata(hObject, handles);
+    guidata(hObject, handles);
 end
-close(figure(1));
-disp('Loop ended.');
-disp({'No. of frames: ' num2str(idx)});
-
-stop(video);
-delete(video);
 
 % Clean
 if exist('pointTracker')
