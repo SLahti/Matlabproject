@@ -1,5 +1,5 @@
 %%% tracker.m
-%%% 2014-05-17
+%%% 2014-05-16
 %%% GUI that finds or tracks an object in an image or video feed. 
 %%% The object can be browsed from a .mat-file, or saved from an snapshot.
 %%% By: Sebastian Lahti and Martin Härnwall
@@ -65,6 +65,7 @@ set(handles.markObject, 'Value',1,'Enable','Off');
 set(handles.learnObject,'Value',1,'Enable','Off');
 set(handles.saveObject, 'Value',1,'Enable','Off');
 set(handles.trackTarget,'Value',1,'Enable','Off');
+set(handles.findObject,'Value',1,'Enable','Off');
 %set(handles.getSnapshot,'Value',1,'Enable','Off');
 set(handles.findObject, 'Value',1,'Enable','Off');
 
@@ -190,7 +191,6 @@ guidata(hObject, handles);
 
 %%% MARK OBJECT BUTTON
 function markObject_Callback(hObject, eventdata, handles)
-disp('MARK OBJECT BUTTON');
 
 % Need to stop camera in order to use imrect?
 stop(handles.video);
@@ -247,7 +247,6 @@ guidata(hObject, handles);
 
 %%% BROWSE TARGET IMAGE BUTTON
 function browseTargetImage_Callback(hObject, eventdata, handles)
-disp('BROWSE TARGET IMAGE BUTTON');
 
 % Stop camera
 stop(handles.video);
@@ -315,7 +314,7 @@ if ~get(hObject,'Value')
     start(handles.video);
     disp('Initialized.');
     
-    trackTarget(tracker, flag, handles);
+    trackingLoop(tracker, flag, handles);
     
 elseif get(hObject,'Value')
     stop(handles.video);
@@ -328,47 +327,6 @@ elseif get(hObject,'Value')
     clear points isFound visablePts; 
     disp('Cleand.');
 end
-
-%{
-% While toggle is high
-while flag %~get(hObject,'Value') && flag
-    
-    frame  = getsnapshot(handles.video);
-    
-    [points, isFound] = step(tracker, frame);
-    visiblePts = points(isFound, :);
-    
-    % Only if there are more than two visable pts
-    %if size(visiblePts, 1) >= 2
-        % Annotated the visable pts in the frame
-        frame = insertMarker(frame, visiblePts, 'X', 'Size', 10, ...
-                             'Color', 'green');
-   % else
-        % If 'all' pts are lost: end loop
-       % disp('Less than two points!');
-   % end
-
-    % Display the annotated video frame using the video player object
-    imshow(frame, 'Parent', handles.axes2);
-    
-end
-%}
-
-%{
-% When toggle goes low: Clean
-if get(hObject,'Value')
-    
-    stop(handles.video);
-    
-    if exist('pointTracker')
-        release(tracker);
-        delete(tracker);
-    end
-
-    clear points isFound visablePts; 
-    disp('Cleand.');
-end
-%}
 
 % Update handles structure
 guidata(hObject, handles);

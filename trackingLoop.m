@@ -1,16 +1,14 @@
-%%% newTrackTarget
-%%%
-%%%
-%%%
+%%% trackingLoop
+%%% Input:  A pointtracker object, initiated and ready and  a run-flag
+%%% Output: Non. Displays the points in the frames
+%%% 
 
-function trackTarget(tracker, flag, handles)
+function trackingLoop(tracker, flag, handles)
 
 while flag
 
     frame  = getsnapshot(handles.video);
-    axes(handles.axes2);
-    imshow(frameOut, 'Parent', handles.axes2);
-    
+
     [points, isFound] = step(tracker, frame);
     visiblePts = points(isFound, :);
 
@@ -19,11 +17,8 @@ while flag
     % Annotated the visable pts in the frame
     frameOut = insertMarker(frame, visiblePts, 'X', 'Size', 10, ...
                              'Color', 'green');
-    % else
-        % If 'all' pts are lost: end loop
-       % disp('Less than two points!');
-    % end
-
-    % Display the annotated video frame using the video player object
+                         
+    imshow(frameOut, 'Parent', handles.axes2);
     
+    flushdata(handles.video);
 end

@@ -10,4 +10,4 @@ pts    = points;
 feat   = features;
 valPts = validPts;
 
-uisave({'img', 'pts', 'feat', 'valPts'}, 'object.mat');
+uisave({'img', 'pts', 'feat', 'valPts'}, './Objects/object.mat');

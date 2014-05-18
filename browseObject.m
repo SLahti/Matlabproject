@@ -5,7 +5,7 @@
 
 function [object] = browseObject()
 
-[file, path] = uigetfile('*.mat', 'Open an object');
+[file, path] = uigetfile('./Objects/*.mat', 'Open an object');
 
 filePath = fullfile(path, file);
 
