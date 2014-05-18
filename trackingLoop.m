@@ -3,9 +3,9 @@
 %%% Output: Non. Displays the points in the frames
 %%% 
 
-function trackingLoop(tracker, flag, handles)
+function trackingLoop(tracker, handles)
 
-while flag
+while isrunning(handles.video)
 
     frame  = getsnapshot(handles.video);
 

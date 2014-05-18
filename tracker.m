@@ -67,7 +67,6 @@ set(handles.saveObject, 'Value',1,'Enable','Off');
 set(handles.trackTarget,'Value',1,'Enable','Off');
 set(handles.findObject,'Value',1,'Enable','Off');
 %set(handles.getSnapshot,'Value',1,'Enable','Off');
-set(handles.findObject, 'Value',1,'Enable','Off');
 
 % Create video object
 % Putting the object into manual trigger mode and then
@@ -141,7 +140,7 @@ disp('BROWSE EXISTING OBJECT BUTTON');
 object = browseObject();
 
 % Annotates the pts in the image and shows it in axes1
-objImg = insertMarker(object.img, object.pts, 'X', 'Color', 'yellow');
+objImg = insertMarker(object.img, object.pts.Location, 'X', 'Color', 'yellow');
 imshow(objImg, 'Parent', handles.axes1);
 
 % Saves the features from the object as an/with a handle
@@ -215,15 +214,15 @@ guidata(hObject, handles);
 
 %%% LEARN OBJECT BUTTON
 function learnObject_Callback(hObject, eventdata, handles)
-disp('LEARN OBJECT BUTTON');
 
 % The learnObject-func. returns obj.- image, pts, feat and valid pts.
 [handles.objImg, handles.objPts, handles.objFeat, handles.validPts] = ...
     learnObject(handles.rawObjImg, handles.objReg, handles);
 
 % Enables save-, find- and track-buttons
+set(handles.markObject, 'Value', 1, 'Enable', 'Off');
+set(handles.learnObject, 'Value', 1, 'Enable', 'Off');
 set(handles.saveObject, 'Value', 1, 'Enable', 'On');
-set(handles.findObject, 'Value', 1, 'Enable', 'On');
 set(handles.trackTarget, 'Value', 1, 'Enable', 'On');
 
 % Update handles structure
@@ -231,7 +230,6 @@ guidata(hObject, handles);
 
 %%% SAVE OBJECT BUTTON
 function saveObject_Callback(hObject, eventdata, handles)
-disp('SAVE OBJECT BUTTON');
 
 % Saves an .MAT-file with obj. image, feature pts, features and valid pts
 saveObject(handles.objImg, handles.objPts, ...
@@ -264,7 +262,6 @@ guidata(hObject, handles);
 
 %%% TARGET SNAPSHOT BUTTON
 function targetSnapshot_Callback(hObject, eventdata, handles)
-disp('TARGET SNAPSHOT BUTTON');
 
 % Starts the camera if it is not running
 if ~isrunning(handles.video)
@@ -287,7 +284,6 @@ guidata(hObject, handles);
 
 %%% FIND OBJECT BUTTON
 function findObject_Callback(hObject, eventdata, handles)
-disp('FIND OBJECT BUTTON');
 
 % Wierd bugg. Stopping camera helps...
 stop(handles.video);
@@ -301,32 +297,37 @@ guidata(hObject, handles);
 
 %%% TRACK TARGET TOGGLE-BUTTON
 function trackTarget_Callback(hObject, eventdata, handles)
-disp('TRACK TARGET TOGGLE-BUTTON');
 
 % When toggle high: initialize
 if ~get(hObject,'Value')
     
     frame = getsnapshot(handles.video);
     
-    [tracker, flag] = initializeTracker(frame, handles.objFeat, handles);
+    [ptsTracker, flag] = initializeTracker(frame, handles.objFeat, handles);
     
     axes(handles.axes2);
     start(handles.video);
     disp('Initialized.');
     
-    trackingLoop(tracker, flag, handles);
+    trackingLoop(ptsTracker, handles);
     
 elseif get(hObject,'Value')
+    
+    falseTracker = false;
     stop(handles.video);
+    trackingLoop(falseTracker, handles);
+    
     
     if exist('pointTracker')
-        release(tracker);
-        delete(tracker);
+        release(ptsTracker);
+        delete(ptsTracker);
     end
 
     clear points isFound visablePts; 
     disp('Cleand.');
 end
+
+
 
 % Update handles structure
 guidata(hObject, handles);
